@@ -158,11 +158,13 @@ node watch-sync.mjs
 
 ```powershell
 pnpm build
+# 可选：排掉 Astro 的构建缓存，Halo 用不到它
 Remove-Item -Recurse -Force templates\.prerender -ErrorAction SilentlyContinue
-Compress-Archive -Path theme.yaml,settings.yaml,templates -DestinationPath yudi-cherryblossom-1.0.7.zip
+# Windows 自带的 tar：条目路径写正斜杠，Halo 在 Linux 上能正确解压
+tar -a -c -f yudi-cherryblossom-1.0.7.zip theme.yaml settings.yaml templates
 ```
 
-也可以使用官方的 [`@halo-dev/theme-package-cli`](https://github.com/halo-dev/theme-package-cli) 打包。
+> ⚠️ 不要用 PowerShell 的 `Compress-Archive`：它会把条目路径写成反斜杠（`templates\index.html`），在 Linux 上会被当成文件名的一部分，解压出来的主题是坏的。用 `tar`、7-Zip 或官方的 [`@halo-dev/theme-package-cli`](https://github.com/halo-dev/theme-package-cli) 都可以。
 
 主题包的结构：**压缩后第一层必须是 `theme.yaml`、`settings.yaml`、`templates/`**，不要再套一层目录。
 

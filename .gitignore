@@ -25,6 +25,9 @@ pnpm-debug.log*
 
 templates/
 
+# 打包产物
+*.zip
+
 # 本地联调同步配置（含服务器地址，不公开）
 watch-sync.local.json
 
