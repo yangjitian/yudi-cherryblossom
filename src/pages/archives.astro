@@ -2,64 +2,46 @@
 import Layout from "../layouts/Layout.astro";
 ---
 
-<Layout pageTitle="归档">
+<Layout petals="full">
   <Fragment slot="head">
     <title th:text="|归档 - ${site.title}|"></title>
   </Fragment>
 
-  <section class="archive-list" aria-label="Archive list">
-    <th:block th:each="archive : ${archives.items}">
-      <th:block th:each="month : ${archive.months}">
-        <div class="archive-group">
-          <h2
-            class="archive-group__year"
-            th:text="|${archive.year} · ${month.month}|"
-          >
-          </h2>
-          <ul class="archive-group__items">
-            <li th:each="post : ${month.posts}" class="archive-entry">
-              <span
-                class="archive-entry__date"
-                th:text="${#dates.format(post.spec.publishTime, 'MM/dd')}"
-              ></span>
-              <div>
-                <h3 class="archive-entry__title">
-                  <a
-                    th:href="@{${post.status.permalink}}"
-                    th:text="${post.spec.title}"></a>
-                </h3>
-                <p
-                  class="archive-entry__summary"
-                  th:text="${post.status.excerpt}"
-                >
-                </p>
-              </div>
-            </li>
-          </ul>
+  <th:block th:with="posts = ${postFinder.list({page: 1, size: 500})}">
+    <div class="page-shell">
+      <div class="page-heading" id="petalScope">
+        <h1>归档</h1>
+        <p class="page-meta">拖动或滚动左侧弧线选择年份</p>
+      </div>
+
+      <div class="arc" id="arc" th:unless="${posts.total == 0}">
+        <div class="arc-axis" id="arcAxis">
+          <svg id="arcSvg" width="150" height="620"></svg>
+          <div class="arc-hint">滚轮 / 拖动</div>
         </div>
-      </th:block>
-    </th:block>
+        <div class="arc-col">
+          <div class="arc-months" id="arcMonths"></div>
+        </div>
+        <div class="arc-col">
+          <div class="arc-posts" id="arcPosts"></div>
+        </div>
+      </div>
 
-    <div th:if="${archives.total == 0}" class="archive-empty">暂无文章。</div>
-  </section>
+      <div class="empty-state" th:if="${posts.total == 0}">
+        <span class="empty-mark">✿</span>
+        还没有可归档的文章
+      </div>
 
-  <nav
-    th:if="${archives.totalPages gt 1}"
-    class="pagination"
-    aria-label="Pagination"
-  >
-    <a
-      th:if="${archives.hasPrevious()}"
-      th:href="@{${archives.prevUrl}}"
-      class="pagination__prev">&larr; 较新</a
-    >
-    <span
-      class="pagination__info"
-      th:text="|${archives.page} / ${archives.totalPages}|"></span>
-    <a
-      th:if="${archives.hasNext()}"
-      th:href="@{${archives.nextUrl}}"
-      class="pagination__next">较旧 &rarr;</a
-    >
-  </nav>
+      <!-- 文章数据在服务端渲染成扁平列表，由 main-v3.js 按年 / 月分组后驱动弧形交互 -->
+      <div id="arcSource" hidden>
+        <a
+          th:each="post : ${posts.items}"
+          th:href="@{${post.status.permalink}}"
+          th:text="${post.spec.title}"
+          th:attr="data-year=${#temporals.format(post.spec.publishTime, 'yyyy')}, data-month=${#temporals.format(post.spec.publishTime, 'MM')}"
+        >
+        </a>
+      </div>
+    </div>
+  </th:block>
 </Layout>

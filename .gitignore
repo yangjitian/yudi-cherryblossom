@@ -24,3 +24,10 @@ pnpm-debug.log*
 .idea/
 
 templates/
+
+# 本地联调同步配置（含服务器地址，不公开）
+watch-sync.local.json
+
+# 本站点自己的内容文档，不属于主题功能
+docs/privacy-policy.md
+docs/user-agreement.md

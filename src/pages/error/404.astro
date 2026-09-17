@@ -1,0 +1,18 @@
+---
+import Layout from "../../layouts/Layout.astro";
+---
+
+<Layout petals="header">
+  <Fragment slot="head">
+    <title th:text="|404 - ${site.title}|"></title>
+  </Fragment>
+
+  <div class="page-shell">
+    <div class="error-page" id="petalScope">
+      <p class="error-code">404</p>
+      <h1 th:text="${#strings.defaultString(error.title, '页面走丢了')}">页面走丢了</h1>
+      <p>这个地址下没有内容，它可能被移动或者已经删除了。</p>
+      <a class="read-link" href="/" th:href="@{/}">返回首页 →</a>
+    </div>
+  </div>
+</Layout>

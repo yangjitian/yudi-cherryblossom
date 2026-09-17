@@ -1,19 +1,42 @@
-<ul class="post-feed__list" role="list">
-  <li th:each="post : ${posts.items}" class="post-feed__item">
-    <a class="post-feed__link" th:href="@{${post.status.permalink}}">
-      <div class="post-feed__body">
-        <p
-          class="post-feed__date"
-          th:text="${#dates.format(post.spec.publishTime, 'yyyy-MM-dd')}"
-        ></p>
-        <h2 class="post-feed__title" th:text="${post.spec.title}"></h2>
-        <p class="post-feed__excerpt" th:text="${post.status.excerpt}"></p>
+<!-- 文章卡片列表片段：博客列表页 / 分类页 / 标签页共用
+     offset 表示跳过前面几篇（落地页首篇已作为精选展示）
+     无封面图时不输出图片区域，卡片退化为纯文字单栏 -->
+<th:block th:fragment="list (posts, offset)">
+  <a
+    class="post-card"
+    th:classappend="${#strings.isEmpty(post.spec.cover)} ? 'post-card--text'"
+    th:each="post, iter : ${posts.items}"
+    th:if="${iter.index >= offset}"
+    th:href="@{${post.status.permalink}}"
+  >
+    <img
+      class="post-thumb"
+      th:if="${not #strings.isEmpty(post.spec.cover)}"
+      th:src="${post.spec.cover}"
+      alt=""
+      loading="lazy"
+    />
+
+    <div class="post-main">
+      <p class="post-title serif" th:text="${post.spec.title}"></p>
+      <p
+        class="post-excerpt"
+        th:if="${not #strings.isEmpty(post.status.excerpt)}"
+        th:text="${post.status.excerpt}"
+      ></p>
+      <div class="post-sub">
+        <div class="post-tags">
+          <span
+            th:each="tag, t : ${post.tags}"
+            th:class="${t.index % 2 == 0 ? 'tag-pill tag-pill--pink' : 'tag-pill tag-pill--blue'}"
+            th:text="${tag.spec.displayName}"
+          ></span>
+        </div>
+        <span
+          class="post-date"
+          th:text="${#temporals.format(post.spec.publishTime, 'MM.dd')}"
+        ></span>
       </div>
-      <img
-        th:unless="${#strings.isEmpty(post.spec.cover)}"
-        class="post-feed__image"
-        th:src="${post.spec.cover}"
-      />
-    </a>
-  </li>
-</ul>
+    </div>
+  </a>
+</th:block>

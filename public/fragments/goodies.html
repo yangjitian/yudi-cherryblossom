@@ -1,0 +1,186 @@
+<!-- 好物分享页主体片段：分类页 category.html 在「好物分享」分类下套用它，
+     条目数据来自 主题设置 → 好物分享（theme.config.goodies.items） -->
+<th:block th:fragment="body">
+  <div class="page-shell">
+    <div class="page-heading">
+      <h1 th:text="${category.spec.displayName}">好物分享</h1>
+      <p class="page-meta">Curated content</p>
+    </div>
+
+    <hr class="goods-divider" />
+
+    <div class="goods-toolbar">
+      <button class="goods-reset active" id="goodsReset" type="button">
+        全部
+      </button>
+      <div class="goods-search">
+        <div class="goods-search-box">
+          <svg
+            viewBox="0 0 24 24"
+            fill="none"
+            stroke="currentColor"
+            stroke-width="1.8"
+            aria-hidden="true"
+          >
+            <circle cx="11" cy="11" r="7"></circle>
+            <path d="M21 21l-4.3-4.3" stroke-linecap="round"></path>
+          </svg>
+          <input
+            type="text"
+            id="goodsTag"
+            placeholder="按标签搜索，比如 AI_Agent"
+          />
+        </div>
+        <button
+          class="goods-search-btn"
+          id="goodsSubmit"
+          type="button"
+          aria-label="搜索"
+        >
+          <svg
+            viewBox="0 0 24 24"
+            fill="none"
+            stroke="currentColor"
+            stroke-width="1.8"
+            aria-hidden="true"
+          >
+            <circle cx="11" cy="11" r="7"></circle>
+            <path d="M21 21l-4.3-4.3" stroke-linecap="round"></path>
+          </svg>
+        </button>
+      </div>
+    </div>
+
+    <div class="goods-grid" id="goodsGrid">
+      <th:block
+        th:each="item : ${theme.config?.goodies?.items}"
+        th:if="${not #strings.isEmpty(item['title'])}"
+      >
+        <!-- 来源域名从原网站链接推导：去掉协议头，取第一个 / 之前的部分 -->
+        <div
+          class="goods-card"
+          th:with="domain=${#strings.substringBefore(#strings.replace(#strings.replace(item['url'], 'https://', ''), 'http://', ''), '/')}"
+          th:attr="data-tags=${item['tags']}"
+        >
+          <span
+            class="goods-badge"
+            title="我写过体验笔记"
+            th:if="${not #strings.isEmpty(item['note'])}"
+          ></span>
+
+          <!-- 上半区：点击去好物的原网站 -->
+          <a
+            class="goods-card-top"
+            th:href="${not #strings.isEmpty(item['url']) ? item['url'] : item['note']}"
+            th:attr="target=${not #strings.isEmpty(item['url']) ? '_blank' : null},rel=${not #strings.isEmpty(item['url']) ? 'noopener' : null}"
+          >
+            <span class="goods-icon">
+              <svg
+                th:if="${#strings.containsIgnoreCase(domain, 'github')}"
+                viewBox="0 0 16 16"
+                fill="currentColor"
+                aria-hidden="true"
+              >
+                <path
+                  fill-rule="evenodd"
+                  d="M8 0C3.58 0 0 3.58 0 8c0 3.54 2.29 6.53 5.47 7.59.4.07.55-.17.55-.38 0-.19-.01-.82-.01-1.49-2.01.37-2.53-.49-2.69-.94-.09-.23-.48-.94-.82-1.13-.28-.15-.68-.52-.01-.53.63-.01 1.08.58 1.23.82.72 1.21 1.87.87 2.33.66.07-.52.28-.87.51-1.07-1.78-.2-3.64-.89-3.64-3.95 0-.87.31-1.59.82-2.15-.08-.2-.36-1.02.08-2.12 0 0 .67-.21 2.2.82.64-.18 1.32-.27 2-.27.68 0 1.36.09 2 .27 1.53-1.04 2.2-.82 2.2-.82.44 1.1.16 1.92.08 2.12.51.56.82 1.27.82 2.15 0 3.07-1.87 3.75-3.65 3.95.29.25.54.73.54 1.48 0 1.07-.01 1.93-.01 2.2 0 .21.15.46.55.38A8.013 8.013 0 0016 8c0-4.42-3.58-8-8-8z"
+                ></path>
+              </svg>
+              <svg
+                th:unless="${#strings.containsIgnoreCase(domain, 'github')}"
+                viewBox="0 0 24 24"
+                fill="none"
+                stroke="currentColor"
+                stroke-width="1.6"
+                stroke-linecap="round"
+                stroke-linejoin="round"
+                aria-hidden="true"
+              >
+                <circle cx="12" cy="12" r="9"></circle>
+                <path
+                  d="M3 12h18M12 3c2.5 2.5 3.8 5.5 3.8 9s-1.3 6.5-3.8 9c-2.5-2.5-3.8-5.5-3.8-9s1.3-6.5 3.8-9z"
+                ></path>
+              </svg>
+            </span>
+            <div class="goods-heading">
+              <h3 class="goods-title" th:text="${item['title']}">好物名称</h3>
+              <span class="goods-domain" th:text="${domain}"
+                >github.com</span
+              >
+            </div>
+          </a>
+
+          <!-- 下半区：点击去我的体验笔记；没写过笔记就回落到原网站 -->
+          <a
+            class="goods-card-body"
+            th:href="${#strings.isEmpty(item['note']) ? item['url'] : item['note']}"
+            th:attr="target=${#strings.isEmpty(item['note']) ? '_blank' : null},rel=${#strings.isEmpty(item['note']) ? 'noopener' : null}"
+          >
+            <p class="goods-desc" th:text="${item['desc']}"></p>
+
+            <div class="goods-tags">
+              <span
+                class="tag-pill tag-pill--pink"
+                th:each="tag : ${#strings.arraySplit(item['tags'], ',')}"
+                th:if="${not #strings.isEmpty(tag)}"
+                th:text="|#${#strings.trim(tag)}|"
+              ></span>
+            </div>
+
+            <div class="goods-card-foot">
+              <span
+                th:text="${#strings.isEmpty(item['note']) ? '查看详情' : '阅读我的笔记'}"
+                >查看详情</span
+              >
+              <span class="goods-arrow" aria-hidden="true">→</span>
+            </div>
+          </a>
+        </div>
+      </th:block>
+    </div>
+
+    <div
+      class="empty-state"
+      th:if="${#lists.isEmpty(theme.config?.goodies?.items)}"
+    >
+      <span class="empty-mark">✿</span>
+      还没有添加任何好物，去 Console → 主题设置 → 好物分享添加
+    </div>
+  </div>
+
+  <script>
+    (function () {
+      var grid = document.getElementById("goodsGrid");
+      if (!grid) return;
+
+      var input = document.getElementById("goodsTag");
+      var reset = document.getElementById("goodsReset");
+      var submit = document.getElementById("goodsSubmit");
+      var cards = grid.querySelectorAll(".goods-card");
+
+      function apply(query) {
+        var key = query.trim().toLowerCase();
+        Array.prototype.forEach.call(cards, function (card) {
+          var tags = (card.getAttribute("data-tags") || "").toLowerCase();
+          card.style.display =
+            key === "" || tags.indexOf(key) > -1 ? "" : "none";
+        });
+        reset.classList.toggle("active", key === "");
+      }
+
+      input.addEventListener("input", function () {
+        apply(input.value);
+      });
+      input.addEventListener("keydown", function (event) {
+        if (event.key === "Enter") apply(input.value);
+      });
+      submit.addEventListener("click", function () {
+        apply(input.value);
+      });
+      reset.addEventListener("click", function () {
+        input.value = "";
+        apply("");
+      });
+    })();
+  </script>
+</th:block>

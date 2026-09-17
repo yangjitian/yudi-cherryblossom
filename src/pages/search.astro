@@ -1,0 +1,36 @@
+---
+import Layout from "../layouts/Layout.astro";
+---
+
+<Layout>
+  <Fragment slot="head">
+    <title th:text="|搜索 - ${site.title}|"></title>
+  </Fragment>
+
+  <div class="page-shell">
+    <div class="page-heading">
+      <h1>搜索</h1>
+      <p class="page-meta">Search</p>
+    </div>
+
+    <form class="search-form" data-search-page>
+      <input
+        id="searchInput"
+        type="text"
+        name="keyword"
+        placeholder="输入关键词搜索文章…"
+        autocomplete="off"
+      />
+      <button type="submit">搜索</button>
+    </form>
+
+    <p class="search-summary" id="searchSummary"></p>
+
+    <div class="empty-state" id="searchHint">
+      <span class="empty-mark">✿</span>
+      输入关键词，开始检索站点内容
+    </div>
+
+    <div class="search-results" id="searchResults"></div>
+  </div>
+</Layout>

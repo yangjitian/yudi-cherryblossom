@@ -2,25 +2,59 @@
 import Layout from "../layouts/Layout.astro";
 ---
 
-<Layout contentClass="prose">
+<Layout wide petals="header">
   <Fragment slot="head">
     <title th:text="|${post.spec.title} - ${site.title}|"></title>
   </Fragment>
 
-  <div class="page-heading">
-    <h1 th:text="${post.spec.title}"></h1>
-    <p class="page-meta">
-      <span th:text="${#dates.format(post.spec.publishTime, 'yyyy-MM-dd')}"
-      ></span>
-    </p>
+  <div class="article-shell">
+    <article>
+      <div class="article-header" id="petalScope">
+        <span
+          class="badge"
+          th:if="${not #lists.isEmpty(post.categories)}"
+          th:with="c = ${post.categories[0]}"
+          th:class="${#lists.contains({'技术','技术分享','随笔'}, c.spec.displayName) ? 'badge blue' : 'badge pink'}"
+          th:text="${c.spec.displayName}"
+        ></span>
+        <h1 class="serif" th:text="${post.spec.title}"></h1>
+        <div class="article-meta">
+          <span th:text="${#temporals.format(post.spec.publishTime, 'yyyy 年 MM 月 dd 日')}"></span>
+          <th:block th:each="tag, t : ${post.tags}">
+            <span class="sep">·</span>
+            <span
+              th:class="${t.index % 2 == 0 ? 'tag pink' : 'tag blue'}"
+              th:text="${tag.spec.displayName}"
+            ></span>
+          </th:block>
+        </div>
+      </div>
+
+      <button
+        type="button"
+        class="toc-trigger"
+        id="tocTrigger"
+        aria-expanded="false"
+        aria-controls="tocSidebar"
+      >
+        本文目录
+        <span class="toc-trigger-caret" aria-hidden="true"></span>
+      </button>
+
+      <div class="prose" th:utext="${post.content.content}"></div>
+    </article>
+
+    <aside class="toc-sidebar" id="tocSidebar">
+      <div class="toc-label">本文目录</div>
+      <ul></ul>
+    </aside>
   </div>
 
-  <th:block th:utext="${post.content.content}"></th:block>
-
-  <halo:comment
-    group="content.halo.run"
-    kind="Post"
-    th:attr="name=${post.metadata.name}"
-  >
-  </halo:comment>
+  <section class="comments" th:if="${haloCommentEnabled}">
+    <halo:comment
+      group="content.halo.run"
+      kind="Post"
+      th:attr="name=${post.metadata.name}"
+    ></halo:comment>
+  </section>
 </Layout>

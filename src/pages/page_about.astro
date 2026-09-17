@@ -1,0 +1,176 @@
+---
+import Layout from "../layouts/Layout.astro";
+---
+
+<Layout petals="full">
+  <Fragment slot="head">
+    <title th:text="|${singlePage.spec.title} - ${site.title}|"></title>
+  </Fragment>
+
+  <div class="page-shell">
+    <div class="about-head-row" id="petalScope">
+      <div class="about-title-block">
+        <h1 th:text="${singlePage.spec.title}">关于</h1>
+        <p class="about-eyebrow">About Me</p>
+      </div>
+
+      <div class="about-identity">
+        <img
+          class="about-avatar-img"
+          th:if="${not #strings.isEmpty(theme.config?.profile?.avatar)}"
+          th:src="${theme.config?.profile?.avatar}"
+          th:alt="${site.title}"
+        />
+        <div
+          class="about-avatar-fallback"
+          th:if="${#strings.isEmpty(theme.config?.profile?.avatar)}"
+          th:text="${#strings.substring(site.title, 0, 1)}"
+        >
+          雨
+        </div>
+        <div class="about-id-text">
+          <span class="about-id-name" th:text="${site.title}">雨滴</span>
+          <span class="about-id-sub">/ yudi</span>
+        </div>
+      </div>
+    </div>
+
+    <hr class="about-divider" />
+
+    <div class="about-label">
+      <span class="dash"></span>
+      <span class="text">简介</span>
+    </div>
+    <p class="about-bio" th:text="${theme.config?.profile?.bio}"></p>
+
+    <div class="about-contact-row">
+      <!-- 邮箱：悬浮/点击弹出地址卡片，可复制 -->
+      <div
+        class="contact-item has-card"
+        th:if="${not #strings.isEmpty(theme.config?.profile?.email)}"
+      >
+        <span class="icon-wrap">
+          <svg viewBox="0 0 24 24" fill="none" aria-hidden="true"><rect
+              x="3"
+              y="5"
+              width="18"
+              height="14"
+              rx="3"
+              fill="#f3d7a8"
+              stroke="#c98f3c"
+              stroke-width="1.2"></rect><path
+              d="M3.5 6.2l8.5 6.6 8.5-6.6"
+              stroke="#c98f3c"
+              stroke-width="1.3"
+              stroke-linecap="round"
+              stroke-linejoin="round"></path></svg>
+        </span>
+        <div class="info-card email-card">
+          <div class="email-text" th:text="${theme.config?.profile?.email}"></div>
+          <button
+            class="copy-btn"
+            type="button"
+            th:attr="data-copy=${theme.config?.profile?.email}">复制</button>
+        </div>
+      </div>
+
+      <!-- GitHub：点击新标签跳转 -->
+      <a
+        class="contact-item"
+        th:if="${not #strings.isEmpty(theme.config?.profile?.github)}"
+        th:href="${theme.config?.profile?.github}"
+        target="_blank"
+        rel="noopener"
+        aria-label="GitHub"
+      >
+        <span class="icon-wrap">
+          <svg viewBox="0 0 16 16" fill="#181717" aria-hidden="true"><path
+              fill-rule="evenodd"
+              d="M8 0C3.58 0 0 3.58 0 8c0 3.54 2.29 6.53 5.47 7.59.4.07.55-.17.55-.38 0-.19-.01-.82-.01-1.49-2.01.37-2.53-.49-2.69-.94-.09-.23-.48-.94-.82-1.13-.28-.15-.68-.52-.01-.53.63-.01 1.08.58 1.23.82.72 1.21 1.87.87 2.33.66.07-.52.28-.87.51-1.07-1.78-.2-3.64-.89-3.64-3.95 0-.87.31-1.59.82-2.15-.08-.2-.36-1.02.08-2.12 0 0 .67-.21 2.2.82.64-.18 1.32-.27 2-.27.68 0 1.36.09 2 .27 1.53-1.04 2.2-.82 2.2-.82.44 1.1.16 1.92.08 2.12.51.56.82 1.27.82 2.15 0 3.07-1.87 3.75-3.65 3.95.29.25.54.73.54 1.48 0 1.07-.01 1.93-.01 2.2 0 .21.15.46.55.38A8.013 8.013 0 0016 8c0-4.42-3.58-8-8-8z"></path></svg>
+        </span>
+      </a>
+
+      <!-- 微信：悬浮/点击弹出二维码卡片 -->
+      <div
+        class="contact-item has-card"
+        th:if="${not #strings.isEmpty(theme.config?.profile?.wechatQr)}"
+      >
+        <span class="icon-wrap">
+          <svg viewBox="0 0 24 24" fill="#07C160" aria-hidden="true"><path
+              d="M9.2 3.6c-4 0-7.2 2.75-7.2 6.14 0 1.94 1.06 3.65 2.72 4.79-.13.43-.5 1.63-.57 1.88-.09.31.11.3.24.22.1-.06 1.62-1.07 2.28-1.5.5.14 1.02.22 1.55.24-.08-.36-.12-.73-.12-1.1 0-3.24 3.13-5.86 6.98-5.86.24 0 .47.01.7.03C15.4 5.9 12.6 3.6 9.2 3.6zm-2.5 3.9c.55 0 1 .43 1 .96 0 .53-.45.96-1 .96s-1-.43-1-.96c0-.53.45-.96 1-.96zm5 0c.55 0 1 .43 1 .96 0 .53-.45.96-1 .96s-1-.43-1-.96c0-.53.45-.96 1-.96z"></path><path
+              d="M15.5 10.3c-3.3 0-5.9 2.19-5.9 4.9 0 2.7 2.6 4.9 5.9 4.9.46 0 .9-.05 1.33-.13.55.35 1.78 1.13 1.87 1.18.11.07.28.08.2-.2-.06-.21-.36-1.19-.47-1.56 1.36-.94 2.27-2.37 2.27-4.19 0-2.71-2.6-4.9-5.9-4.9zm-2.05 3.2c.46 0 .83.36.83.8 0 .44-.37.8-.83.8-.46 0-.83-.36-.83-.8 0-.44.37-.8.83-.8zm4.1 0c.46 0 .83.36.83.8 0 .44-.37.8-.83.8-.46 0-.83-.36-.83-.8 0-.44.37-.8.83-.8z"></path></svg>
+        </span>
+        <div class="info-card wechat-card">
+          <img
+            class="qr-img"
+            th:src="${theme.config?.profile?.wechatQr}"
+            alt="微信二维码"
+          />
+          <div class="qr-caption">微信扫码加我</div>
+        </div>
+      </div>
+    </div>
+  </div>
+
+  <script is:inline>
+    // 邮箱 / 微信：点击图标切换卡片（触屏无 hover 场景），点击其他区域关闭
+    document
+      .querySelectorAll(".contact-item.has-card > .icon-wrap")
+      .forEach(function (icon) {
+        icon.addEventListener("click", function (e) {
+          e.stopPropagation();
+          var item = icon.parentElement;
+          var wasActive = item.classList.contains("is-active");
+          document
+            .querySelectorAll(".contact-item.is-active")
+            .forEach(function (el) {
+              el.classList.remove("is-active");
+            });
+          if (!wasActive) item.classList.add("is-active");
+        });
+      });
+    document.addEventListener("click", function () {
+      document
+        .querySelectorAll(".contact-item.is-active")
+        .forEach(function (el) {
+          el.classList.remove("is-active");
+        });
+    });
+
+    // 复制邮箱（HTTP 非安全上下文下 navigator.clipboard 不存在，降级 execCommand）
+    function copyByExecCommand(text, done) {
+      var ta = document.createElement("textarea");
+      ta.value = text;
+      ta.style.position = "fixed";
+      ta.style.opacity = "0";
+      document.body.appendChild(ta);
+      ta.select();
+      document.execCommand("copy");
+      ta.remove();
+      done();
+    }
+    function copyText(text, done) {
+      if (navigator.clipboard && navigator.clipboard.writeText) {
+        navigator.clipboard.writeText(text).then(done, function () {
+          copyByExecCommand(text, done);
+        });
+      } else {
+        copyByExecCommand(text, done);
+      }
+    }
+    document.querySelectorAll(".copy-btn").forEach(function (btn) {
+      btn.addEventListener("click", function (e) {
+        e.stopPropagation();
+        copyText(btn.dataset.copy, function () {
+          var original = btn.textContent;
+          btn.textContent = "已复制";
+          btn.classList.add("copied");
+          setTimeout(function () {
+            btn.textContent = original;
+            btn.classList.remove("copied");
+          }, 1500);
+        });
+      });
+    });
+  </script>
+</Layout>

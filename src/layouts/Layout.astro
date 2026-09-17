@@ -1,52 +1,81 @@
 ---
-import "../styles/global.css";
-import Footer from "../components/Footer.astro";
 import Header from "../components/Header.astro";
+import Footer from "../components/Footer.astro";
 
 interface Props {
-  pageTitle?: string;
-  contentClass?: string;
+  wide?: boolean;
+  petals?: "full" | "header" | "none";
+  minimal?: boolean;
+  brandHref?: string;
+  bodyClass?: string;
 }
 
-const { pageTitle, contentClass } = Astro.props;
+const {
+  wide = false,
+  petals = "none",
+  minimal = false,
+  brandHref = "/",
+  bodyClass = "",
+} = Astro.props;
 
-const hasHeading = Boolean(pageTitle);
+// 静态资源版本号：构建时自动生成，无需手工维护。
+// （Halo 静态资源缓存一年，且缓存的 theme.spec.version 不随文件变化刷新，
+//   所以每次 build 换一个查询串，保证改动后浏览器能拿到新文件）
+const ASSET_VER = String(Date.now());
 ---
 
 <!doctype html>
-<html lang="en">
+<html lang="zh-CN" data-theme="light">
   <head>
     <meta charset="utf-8" />
-    <meta name="viewport" content="width=device-width,initial-scale=1" />
+    <meta name="viewport" content="width=device-width, initial-scale=1" />
+    <link rel="preconnect" href="https://fonts.googleapis.com" />
+    <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin />
+    <link
+      href="https://fonts.googleapis.com/css2?family=Fraunces:opsz,wght@9..144,300..900&family=Noto+Serif+SC:wght@400;600&family=Noto+Sans+SC:wght@300;400;500;600;700&family=JetBrains+Mono:wght@400;500&display=swap"
+      rel="stylesheet"
+    />
+    <link
+      rel="stylesheet"
+      href="/assets/css/main-v3.css"
+      th:href={`@{/assets/css/main-v3.css(v=${ASSET_VER})}`}
+    />
     <script is:inline>
       (function () {
-        var stored = localStorage.getItem("theme");
+        var stored = localStorage.getItem("yudi-theme");
         var prefersDark = window.matchMedia(
           "(prefers-color-scheme: dark)",
         ).matches;
-        if (stored === "dark" || (!stored && prefersDark)) {
-          document.documentElement.classList.add("dark");
-        }
+        document.documentElement.setAttribute(
+          "data-theme",
+          stored === "dark" || (!stored && prefersDark) ? "dark" : "light",
+        );
       })();
     </script>
     <slot name="head" />
   </head>
-  <body>
-    <Header />
-    <main class="layout-main">
-      <article class="page-shell">
-        {
-          hasHeading && (
-            <header class="page-heading">
-              {pageTitle && <h1>{pageTitle}</h1>}
-            </header>
-          )
-        }
-        <div class:list={["page-content", contentClass]}>
-          <slot />
-        </div>
-      </article>
-    </main>
-    <Footer />
+  <body class:list={[{ wide }, bodyClass]} data-petals={petals === "none" ? undefined : petals}>
+    {
+      petals !== "none" && (
+        <div
+          class:list={[
+            "petal-field",
+            { "petal-field--full": petals === "full" },
+          ]}
+          id="petalField"
+        />
+      )
+    }
+
+    <Header minimal={minimal} brandHref={brandHref} />
+
+    <slot />
+
+    {!minimal && <Footer />}
+
+    <script
+      is:inline
+      src="/assets/js/main-v3.js"
+      th:src={`@{/assets/js/main-v3.js(v=${ASSET_VER})}`}></script>
   </body>
 </html>

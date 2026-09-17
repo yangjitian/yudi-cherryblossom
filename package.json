@@ -4,7 +4,7 @@
     "node": ">=22.12.0"
   },
   "scripts": {
-    "dev": "nodemon --config nodemon.json --exec 'astro build'",
+    "dev": "nodemon --config nodemon.json --exec astro build",
     "build": "astro build",
     "astro": "astro",
     "format": "prettier --write ."
@@ -34,6 +34,8 @@
   },
   "devDependencies": {
     "@iconify-json/mingcute": "^1.2.7",
+    "@playwright/test": "^1.63.0",
+    "chokidar": "^5.0.0",
     "nodemon": "^3.1.14",
     "prettier": "3.8.1",
     "prettier-plugin-astro": "0.14.1",

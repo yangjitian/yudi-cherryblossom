@@ -2,20 +2,21 @@
 import Layout from "../layouts/Layout.astro";
 ---
 
-<Layout pageTitle="标签">
+<Layout>
   <Fragment slot="head">
     <title th:text="|标签 - ${site.title}|"></title>
   </Fragment>
 
-  <div class="tag-cloud" role="list" aria-label="Tag list">
-    <a
-      th:each="tag : ${tags}"
-      class="tag-pill"
-      role="listitem"
-      th:href="@{${tag.status.permalink}}"
-    >
-      <span th:text="${tag.spec.displayName}"></span>
-      <span class="tag-pill__count" th:text="${tag.postCount}"></span>
-    </a>
+  <div class="page-shell">
+    <div class="page-heading">
+      <h1>标签</h1>
+      <p class="page-meta" th:with="tags = ${tagFinder.listAll()}" th:text="|${#lists.size(tags)} 个标签|"></p>
+    </div>
+
+    <ul class="skill-tags" th:with="tags = ${tagFinder.listAll()}">
+      <li th:each="tag : ${tags}">
+        <a th:href="@{${tag.status.permalink}}" th:text="${tag.spec.displayName}"></a>
+      </li>
+    </ul>
   </div>
 </Layout>

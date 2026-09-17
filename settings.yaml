@@ -1,0 +1,73 @@
+apiVersion: v1alpha1
+kind: Setting
+metadata:
+  name: yudi-cherryblossom-setting
+spec:
+  forms:
+    - group: profile
+      label: 个人资料
+      formSchema:
+        - $formkit: text
+          name: avatar
+          label: 头像
+          description: 填写头像图片链接，用于关于页展示
+          value: ""
+        - $formkit: textarea
+          name: bio
+          label: 个人简介
+          description: 支持换行，用于关于页作者介绍
+          value: ""
+        - $formkit: text
+          name: email
+          label: 邮箱
+          description: 用于关于页联系方式展示
+          value: ""
+        - $formkit: text
+          name: github
+          label: GitHub
+          description: 填写个人主页地址，用于关于页联系方式展示
+          value: ""
+        - $formkit: attachment
+          name: wechatQr
+          label: 微信二维码
+          description: 上传微信二维码图片，用于关于页"微信扫码加我"展示
+          accepts:
+            - "image/*"
+          value: ""
+    - group: goodies
+      label: 好物分享
+      formSchema:
+        - $formkit: array
+          name: items
+          label: 好物列表
+          description: 一行一条；拖左侧手柄排序，点一行弹窗编辑
+          value: []
+          addLabel: 添加好物
+          itemLabels:
+            - type: text
+              label: $value.title
+          children:
+            - $formkit: text
+              name: title
+              label: 好物名称
+              value: ""
+            - $formkit: textarea
+              name: desc
+              label: 简介
+              value: ""
+            - $formkit: text
+              name: tags
+              label: 标签
+              description: 多个标签用英文逗号分隔，如：开源项目,AI工具
+              value: ""
+            - $formkit: text
+              name: note
+              label: 我的体验笔记链接
+              description: 站内文章地址（如 /archives/xxx）；填了会显示粉色徽标，点卡片下半区跳这里；留空则下半区也跳原网站
+              value: ""
+            - $formkit: text
+              name: url
+              label: 原网站链接
+              description: 好物的原地址；卡片上的来源域名与图标由它推导，点卡片上半区跳这里（新标签页打开）
+              validation: "required"
+              value: ""

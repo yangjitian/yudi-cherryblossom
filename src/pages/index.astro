@@ -2,30 +2,83 @@
 import Layout from "../layouts/Layout.astro";
 ---
 
-<Layout>
+<Layout minimal petals="none" brandHref="/" bodyClass="welcome-page">
   <Fragment slot="head">
     <title th:text="${site.title}"></title>
   </Fragment>
 
-  <th:block th:replace="~{fragments/post-list}"></th:block>
+  <div class="sea" aria-hidden="true">
+    <div class="wave-layer back"></div>
+    <div class="wave-layer front"></div>
+  </div>
+  <div class="rain-field" aria-hidden="true"></div>
 
-  <nav
-    th:if="${posts.totalPages gt 1}"
-    class="pagination"
-    aria-label="Pagination"
-  >
+  <svg class="branch-corner" viewBox="0 0 340 340" aria-hidden="true">
+    <defs>
+      <path
+        id="petalShape"
+        d="M14,4 C9,7 6,12 6.5,17 C7,23 11,28 15.4,30 C15.6,30.15 16.4,30.15 16.6,30 C21,28 25,23 25.5,17 C26,12 23,7 18,4 C17.3,5.6 16.6,6.4 16,6.4 C15.4,6.4 14.7,5.6 14,4 Z"
+      ></path>
+    </defs>
+    <path
+      class="branch"
+      d="M -10 40 C 40 55, 80 70, 110 105 C 140 140, 130 190, 160 230"
+      stroke-width="2"
+    ></path>
+    <path class="branch" d="M 60 75 C 85 80, 105 95, 118 118" stroke-width="1.2"></path>
+    <path class="branch" d="M 95 130 C 115 132, 132 142, 142 160" stroke-width="1.2"></path>
+    <path class="branch" d="M 20 20 C 45 25, 65 38, 78 58" stroke-width="1"></path>
+    <use
+      href="#petalShape"
+      class="branch-petal"
+      transform="translate(6,4) scale(0.75) rotate(-10,16,16)"
+      opacity="0.85"
+    ></use>
+    <use
+      href="#petalShape"
+      class="branch-petal"
+      transform="translate(64,45) scale(0.62) rotate(35,16,16)"
+      opacity="0.75"
+    ></use>
+    <use
+      href="#petalShape"
+      class="branch-petal"
+      transform="translate(104,102) scale(0.5) rotate(70,16,16)"
+      opacity="0.65"
+    ></use>
+    <use
+      href="#petalShape"
+      class="branch-petal"
+      transform="translate(128,144) scale(0.42) rotate(15,16,16)"
+      opacity="0.55"
+    ></use>
+    <use
+      href="#petalShape"
+      class="branch-petal"
+      transform="translate(148,214) scale(0.55) rotate(-25,16,16)"
+      opacity="0.5"
+    ></use>
+    <use
+      href="#petalShape"
+      class="branch-petal"
+      transform="translate(30,-2) scale(0.36) rotate(50,16,16)"
+      opacity="0.6"
+    ></use>
+    <use
+      href="#petalShape"
+      class="branch-petal"
+      transform="translate(86,80) scale(0.32) rotate(-40,16,16)"
+      opacity="0.5"
+    ></use>
+  </svg>
+
+  <section class="welcome">
+    <p class="welcome-slogan fade-in d3">微小如雨滴，也要奔赴自己的海</p>
     <a
-      th:if="${posts.hasPrevious()}"
-      th:href="@{${posts.prevUrl}}"
-      class="pagination__prev">&larr; 较新</a
+      class="enter-btn fade-in d4"
+      href="/categories/tech-shares"
+      th:href="@{/categories/tech-shares}"
+      >进入博客 →</a
     >
-    <span
-      class="pagination__info"
-      th:text="|${posts.page} / ${posts.totalPages}|"></span>
-    <a
-      th:if="${posts.hasNext()}"
-      th:href="@{${posts.nextUrl}}"
-      class="pagination__next">较旧 &rarr;</a
-    >
-  </nav>
+  </section>
 </Layout>

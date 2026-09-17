@@ -2,21 +2,21 @@
 import Layout from "../layouts/Layout.astro";
 ---
 
-<Layout pageTitle="分类">
+<Layout>
   <Fragment slot="head">
     <title th:text="|分类 - ${site.title}|"></title>
   </Fragment>
 
-  <nav class="taxonomy-list" aria-label="Category list">
-    <div th:each="category : ${categories}" class="taxonomy-list__item">
-      <a
-        class="taxonomy-list__link"
-        th:href="@{${category.status.permalink}}"
-        th:text="${category.spec.displayName}"
-      >
-      </a>
-      <span class="taxonomy-list__count" th:text="|${category.postCount} 篇|">
-      </span>
+  <div class="page-shell">
+    <div class="page-heading">
+      <h1>分类</h1>
+      <p class="page-meta" th:with="categories = ${categoryFinder.listAll()}" th:text="|${#lists.size(categories)} 个分类|"></p>
     </div>
-  </nav>
+
+    <ul class="skill-tags" th:with="categories = ${categoryFinder.listAll()}">
+      <li th:each="category : ${categories}">
+        <a th:href="@{${category.status.permalink}}" th:text="${category.spec.displayName}"></a>
+      </li>
+    </ul>
+  </div>
 </Layout>

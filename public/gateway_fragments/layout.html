@@ -1,0 +1,468 @@
+<!DOCTYPE html>
+<!--
+  覆盖 Halo 核心的认证页布局（登录 / 注册 / 登出 / 密码重置等）。
+  必须保留 fragment 签名 layout (title,head,body) 与 common::basicStaticResources，
+  否则登录注册所需的脚本会缺失。表单本体仍由核心片段渲染，这里只负责外壳。
+-->
+<html
+  th:lang="${#locale.toLanguageTag}"
+  th:fragment="layout (title,head,body)"
+  th:style="|--auth-brand: '${site.title}';|"
+>
+  <head>
+    <meta charset="UTF-8" />
+    <meta content="IE=edge" http-equiv="X-UA-Compatible" />
+    <meta content="webkit" name="renderer" />
+    <meta
+      content="width=device-width, initial-scale=1, maximum-scale=1, user-scalable=no, viewport-fit=cover"
+      name="viewport"
+    />
+    <meta content="noindex,nofollow" name="robots" />
+    <title th:text="${title}"></title>
+    <link th:unless="${#strings.isEmpty(site.favicon)}" rel="icon" th:href="${site.favicon}" />
+
+    <script>
+      (function () {
+        var stored = localStorage.getItem("yudi-theme");
+        var prefersDark = window.matchMedia("(prefers-color-scheme: dark)").matches;
+        document.documentElement.setAttribute(
+          "data-theme",
+          stored === "dark" || (!stored && prefersDark) ? "dark" : "light",
+        );
+      })();
+    </script>
+
+    <th:block th:replace="~{gateway_fragments/common::basicStaticResources}"></th:block>
+
+    <link rel="preconnect" href="https://fonts.googleapis.com" />
+    <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin />
+    <link
+      href="https://fonts.googleapis.com/css2?family=Fraunces:opsz,wght@9..144,300..900&family=Noto+Serif+SC:wght@400;600&family=Noto+Sans+SC:wght@300;400;500;600;700&family=JetBrains+Mono:wght@400;500&display=swap"
+      rel="stylesheet"
+    />
+    <link rel="stylesheet" href="/themes/yudi-cherryblossom/assets/css/main-v3.css" />
+
+    <style>
+      /* ── 认证页：极简居中卡片 ─────────────────────────────
+         令牌全部复用 main-v3.css，这里只做布局与控件外观覆盖，
+         所有选择器都限定在 body.auth-page 下，不影响主题其他页面。 */
+
+      .auth-page {
+        display: flex;
+        box-sizing: border-box;
+        padding: 24px 20px;
+        background: var(--bg);
+        color: var(--ink);
+        font-family: "Noto Sans SC", sans-serif;
+        font-weight: 300;
+        line-height: 1.7;
+      }
+
+      /* 装饰圆点：卡片外侧若有若无的点缀 */
+      .auth-deco {
+        position: fixed;
+        inset: 0;
+        z-index: 0;
+        pointer-events: none;
+      }
+
+      .auth-deco .auth-dot {
+        position: absolute;
+        width: 6px;
+        height: 6px;
+        border-radius: 50%;
+        background: var(--sakura);
+        opacity: 0.5;
+      }
+
+      /* 卡片：margin auto 让内容超高时也不会被裁掉顶部 */
+      .auth-page .gateway-wrapper {
+        position: relative;
+        z-index: 1;
+        width: 100%;
+        max-width: 380px;
+        margin: auto;
+        padding: 40px 36px 34px;
+        background: var(--bg-raised);
+        border: 1px solid var(--line);
+        border-radius: 20px;
+        box-shadow: 0 20px 44px -22px rgba(35, 35, 38, 0.38);
+        font-family: inherit;
+        font-size: 15px;
+        line-height: 1.7;
+      }
+
+      /* 品牌：替换掉核心的 Halo wordmark，改用站点标题 + 一行标语 */
+      .auth-page .halo-logo {
+        display: block;
+        margin-bottom: 26px;
+        text-align: center;
+      }
+
+      .auth-page .halo-logo img {
+        display: none;
+      }
+
+      .auth-page .halo-logo::before {
+        content: var(--auth-brand, "雨滴.");
+        display: block;
+        font-family: "Fraunces", "Noto Serif SC", serif;
+        font-size: 24px;
+        font-weight: 500;
+        letter-spacing: 0.02em;
+        color: var(--ink);
+      }
+
+      .auth-page .halo-logo::after {
+        content: "个人博客";
+        display: block;
+        margin-top: 4px;
+        font-family: "Fraunces", "Noto Serif SC", serif;
+        font-style: italic;
+        font-size: 13px;
+        letter-spacing: 0.06em;
+        color: var(--ink-faint);
+      }
+
+      /* 表单容器：卡片已提供背景与留白，这里去掉核心的白底描边 */
+      .auth-page .halo-form-wrapper {
+        padding: 0;
+        background: none;
+        border: none;
+        border-radius: 0;
+      }
+
+      /* 注册页的「注册」大标题由品牌区承担，隐去以免重复 */
+      .auth-page .form-title {
+        display: none;
+      }
+
+      .auth-page .halo-form .form-item {
+        margin-bottom: 16px;
+      }
+
+      .auth-page .halo-form .form-item-group {
+        flex-direction: column;
+        gap: 16px;
+        margin-bottom: 16px;
+      }
+
+      .auth-page .halo-form .form-item-group .form-item {
+        margin-bottom: 0;
+      }
+
+      .auth-page .halo-form .form-item label,
+      .auth-page .halo-form .form-label-group label {
+        margin-bottom: 6px;
+        font-size: 12px;
+        font-weight: 400;
+        letter-spacing: 0.05em;
+        color: var(--ink-faint);
+      }
+
+      .auth-page .halo-form .form-label-group {
+        margin-bottom: 6px;
+      }
+
+      .auth-page .halo-form .form-input {
+        height: 40px;
+        padding: 0 14px;
+        border: 1px solid var(--line);
+        border-radius: 10px;
+        background: var(--bg);
+        transition: border-color 0.2s ease;
+      }
+
+      .auth-page .halo-form .form-input:focus-within {
+        border-color: var(--lake);
+        outline: none;
+      }
+
+      .auth-page .halo-form .form-item input,
+      .auth-page .halo-form .form-item select {
+        font-family: inherit;
+        font-size: 14px;
+        color: var(--ink);
+      }
+
+      .auth-page .halo-form .form-item input::placeholder {
+        color: var(--ink-faint);
+      }
+
+      .auth-page .halo-form .form-input-stack-icon {
+        color: var(--ink-faint);
+      }
+
+      .auth-page .halo-form .form-input-stack-icon:hover {
+        color: var(--lake-text);
+      }
+
+      /* 邮箱验证码：输入框 + 发送按钮 */
+      .auth-page .halo-form .form-input-group button {
+        border: 1px solid var(--line);
+        border-radius: 10px;
+        background: var(--bg-raised);
+        color: var(--ink-soft);
+        font-family: inherit;
+        transition:
+          color 0.2s ease,
+          border-color 0.2s ease;
+      }
+
+      .auth-page .halo-form .form-input-group button:hover {
+        border-color: var(--lake);
+        color: var(--lake-text);
+        background: var(--bg-raised);
+      }
+
+      /* 记住我 */
+      .auth-page .halo-form .form-item-compact {
+        margin-bottom: 20px;
+      }
+
+      .auth-page .halo-form .form-item-compact label {
+        font-size: 12.5px;
+        color: var(--ink-soft);
+      }
+
+      .auth-page .halo-form input[type="checkbox"] {
+        border-radius: 4px;
+        color: var(--lake);
+      }
+
+      /* 只改未勾选态：勾选态的蓝底白勾由核心样式负责，暗色下才不刺眼 */
+      .auth-page .halo-form input[type="checkbox"]:not(:checked) {
+        background-color: var(--bg);
+        border-color: var(--line);
+      }
+
+      /* 提交按钮：湖水蓝 → 樱花粉 渐变胶囊 */
+      .auth-page .halo-form button[type="submit"] {
+        width: 100%;
+        height: 42px;
+        border: none;
+        border-radius: 999px;
+        background: linear-gradient(150deg, var(--lake) 0%, var(--sakura) 100%);
+        color: #fff;
+        font-family: inherit;
+        font-size: 14px;
+        font-weight: 500;
+        letter-spacing: 0.1em;
+        cursor: pointer;
+        transition: opacity 0.2s ease;
+      }
+
+      .auth-page .halo-form button[type="submit"]:hover {
+        opacity: 0.88;
+      }
+
+      .auth-page .halo-form .form-item-extra-link {
+        font-size: 12.5px;
+        color: var(--lake-text);
+      }
+
+      /* 错误 / 提示条 */
+      .auth-page .halo-form .alert {
+        margin-bottom: 18px;
+        padding: 10px 14px;
+        border: 1px solid var(--line);
+        border-radius: 10px;
+        background: var(--bg);
+        font-size: 12.5px;
+        color: var(--ink-soft);
+      }
+
+      .auth-page .halo-form .alert::before {
+        background: var(--ink-faint);
+      }
+
+      .auth-page .halo-form .alert-error {
+        border-color: var(--sakura);
+      }
+
+      .auth-page .halo-form .alert-error::before {
+        background: var(--sakura);
+      }
+
+      /* 去注册 / 去登录 */
+      .auth-page .signup-notice-content,
+      .auth-page .login-notice-content {
+        margin: 20px 0 0;
+        font-size: 12.5px;
+        color: var(--ink-faint);
+        text-align: center;
+      }
+
+      .auth-page .signup-notice-content a,
+      .auth-page .login-notice-content a {
+        color: var(--lake-text);
+      }
+
+      /* 返回首页：绝对定位到卡片下方，落在卡片之外的空白里 */
+      .auth-page .returntosite-content {
+        position: absolute;
+        left: 0;
+        right: 0;
+        bottom: -44px;
+        margin: 0;
+        font-size: 12.5px;
+        text-align: center;
+      }
+
+      .auth-page .returntosite-content a {
+        color: var(--ink-faint);
+        transition: color 0.2s ease;
+      }
+
+      .auth-page .returntosite-content a:hover {
+        color: var(--lake-text);
+      }
+
+      /* 站点只有中文内容，认证页隐去语言切换，保持极简 */
+      .auth-page .language-switcher {
+        display: none;
+      }
+
+      @media (max-width: 520px) {
+        .auth-page .gateway-wrapper {
+          padding: 32px 22px 28px;
+          border-radius: 16px;
+        }
+
+        .auth-page .halo-logo {
+          margin-bottom: 22px;
+        }
+      }
+
+      /* 轻提示：替换核心脚本里的 Material 绿/红弹窗 */
+      .auth-toast-wrap {
+        position: fixed;
+        top: 24px;
+        left: 50%;
+        transform: translateX(-50%);
+        z-index: 9999;
+        display: flex;
+        flex-direction: column;
+        align-items: center;
+        gap: 10px;
+      }
+
+      .auth-toast {
+        padding: 10px 20px;
+        border: 1px solid var(--line);
+        border-radius: 999px;
+        background: var(--bg-raised);
+        color: var(--ink-soft);
+        font-family: "Noto Sans SC", sans-serif;
+        font-size: 13px;
+        box-shadow: 0 20px 44px -22px rgba(35, 35, 38, 0.38);
+        opacity: 0;
+        transform: translateY(-6px);
+        transition:
+          opacity 0.25s ease,
+          transform 0.25s ease;
+      }
+
+      .auth-toast--in {
+        opacity: 1;
+        transform: translateY(0);
+      }
+
+      .auth-toast--ok {
+        border-color: var(--lake);
+        color: var(--lake-text);
+      }
+
+      .auth-toast--err {
+        border-color: var(--sakura);
+        color: var(--sakura-text);
+      }
+    </style>
+
+    <script>
+      /* 覆盖核心的 sendVerificationCode：保留倒计时逻辑，把提示换成本站风格 */
+      (function () {
+        function toast(message, type) {
+          var wrap = document.querySelector(".auth-toast-wrap");
+          if (!wrap) {
+            wrap = document.createElement("div");
+            wrap.className = "auth-toast-wrap";
+            document.body.appendChild(wrap);
+          }
+
+          var el = document.createElement("div");
+          el.className = "auth-toast auth-toast--" + (type === "error" ? "err" : "ok");
+          el.textContent = message;
+          wrap.appendChild(el);
+
+          requestAnimationFrame(function () {
+            el.classList.add("auth-toast--in");
+          });
+
+          setTimeout(function () {
+            el.classList.remove("auth-toast--in");
+            setTimeout(function () {
+              el.remove();
+            }, 300);
+          }, 2600);
+        }
+
+        window.sendVerificationCode = function (button, sendRequest) {
+          var countdown = 60;
+          var originalText = button.textContent;
+          var timer;
+
+          function startCountdown() {
+            var remaining = countdown;
+            button.disabled = true;
+            button.classList.add("disabled");
+
+            timer = setInterval(function () {
+              if (remaining > 0) {
+                button.textContent = remaining + "s";
+                remaining--;
+              } else {
+                clearInterval(timer);
+                button.textContent = originalText;
+                button.disabled = false;
+                button.classList.remove("disabled");
+              }
+            }, 1000);
+          }
+
+          button.addEventListener("click", function () {
+            button.disabled = true;
+            button.textContent = "发送中…";
+
+            sendRequest()
+              .then(function () {
+                startCountdown();
+                toast("验证码已发送，请查收邮箱", "success");
+              })
+              .catch(function (e) {
+                button.disabled = false;
+                button.textContent = originalText;
+                toast(e instanceof Error && e.message ? e.message : "发送失败，请稍后再试", "error");
+              });
+          });
+        };
+      })();
+    </script>
+
+    <th:block th:if="${head != null}">
+      <th:block th:replace="${head}" />
+    </th:block>
+  </head>
+  <body class="gateway-page auth-page" data-petals="full">
+    <div class="petal-field petal-field--full" id="petalField"></div>
+
+    <div class="auth-deco" aria-hidden="true">
+      <span class="auth-dot" style="top: 16%; left: 14%"></span>
+      <span class="auth-dot" style="bottom: 20%; right: 16%"></span>
+    </div>
+
+    <th:block th:replace="${body}" />
+
+    <script src="/themes/yudi-cherryblossom/assets/js/main-v3.js"></script>
+  </body>
+</html>
