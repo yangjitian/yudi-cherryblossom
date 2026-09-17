@@ -8,7 +8,7 @@ spec:
     name: Yudi
     website: https://github.com/yangjitian
   description: 冷淡简约 + 樱花粉 / 湖水蓝点缀的 Halo 2.x 主题。
-  logo: https://www.halo.run/logo
+  logo: https://raw.githubusercontent.com/yangjitian/yudi-cherryblossom/main/docs/logo.png
   homepage: https://github.com/yangjitian/yudi-cherryblossom
   repo: https://github.com/yangjitian/yudi-cherryblossom.git
   issues: https://github.com/yangjitian/yudi-cherryblossom/issues

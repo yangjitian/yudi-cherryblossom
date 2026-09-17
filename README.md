@@ -1,3 +1,7 @@
+<p align="center">
+  <img src="docs/logo.png" alt="雨滴·手记" width="140" />
+</p>
+
 # 雨滴·手记（yudi-cherryblossom）
 
 一个冷淡简约、以**樱花粉**与**湖水蓝**作点缀的 [Halo](https://www.halo.run/) 2.x 主题。
