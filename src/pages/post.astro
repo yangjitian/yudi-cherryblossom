@@ -20,14 +20,56 @@ import Layout from "../layouts/Layout.astro";
         <h1 class="serif" th:text="${post.spec.title}"></h1>
         <div class="article-meta">
           <span th:text="${#temporals.format(post.spec.publishTime, 'yyyy 年 MM 月 dd 日')}"></span>
+          <!-- 系列标签（「系列·」开头）不在这里重复出现，它由下面的系列徽标承载 -->
           <th:block th:each="tag, t : ${post.tags}">
-            <span class="sep">·</span>
-            <span
-              th:class="${t.index % 2 == 0 ? 'tag pink' : 'tag blue'}"
-              th:text="${tag.spec.displayName}"
-            ></span>
+            <th:block
+              th:with="raw=${tag.spec.displayName},
+                       isSeries=${#strings.startsWith(raw, '系列·') or #strings.startsWith(raw, '系列:') or #strings.startsWith(raw, '系列-')}"
+            >
+              <th:block th:if="${!isSeries}">
+                <span class="sep">·</span>
+                <span
+                  th:class="${t.index % 2 == 0 ? 'tag pink' : 'tag blue'}"
+                  th:text="${raw}"
+                ></span>
+              </th:block>
+            </th:block>
           </th:block>
         </div>
+
+        <!-- 系列：打了「系列·XXX」标签的文章，头部显示一枚徽标，点击进入该系列的系列页
+             （系列页 = 该标签的标签归档页，按发布时间顺序列出全部篇章） -->
+        <th:block th:each="tag : ${post.tags}">
+          <th:block
+            th:with="raw=${tag.spec.displayName},
+                     isSeries=${#strings.startsWith(raw, '系列·') or #strings.startsWith(raw, '系列:') or #strings.startsWith(raw, '系列-')}"
+          >
+            <th:block
+              th:if="${isSeries}"
+              th:with="seriesName=${#strings.substring(raw, 3)},
+                       series=${postFinder.list({page: 1, size: 100, tagName: tag.metadata.name, sort: {'spec.publishTime,asc'}})}"
+            >
+              <div class="series">
+                <a class="series-badge" th:href="@{${tag.status.permalink}}">
+                  <span class="series-mark">系列</span>
+                  <span class="series-name" th:text="${seriesName}"></span>
+                  <span class="series-pos">
+                    第
+                    <th:block
+                      th:each="p, it : ${series.items}"
+                      th:if="${p.metadata.name == post.metadata.name}"
+                      th:text="${it.count}"
+                    ></th:block>
+                    篇 / 共
+                    <th:block th:text="${series.total}"></th:block>
+                    篇
+                  </span>
+                  <span class="series-caret" aria-hidden="true"></span>
+                </a>
+              </div>
+            </th:block>
+          </th:block>
+        </th:block>
       </div>
 
       <button

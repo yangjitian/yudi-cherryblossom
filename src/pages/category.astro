@@ -88,8 +88,9 @@ import Layout from "../layouts/Layout.astro";
 
     <div class="section-label">最新文章</div>
 
+    <!-- post-list--collapse-series：本页把同系列文章收成一张系列卡（由 main-v3.js 完成） -->
     <div
-      class="post-list"
+      class="post-list post-list--collapse-series"
       data-infinite
       th:attr="data-next-url=${posts.hasNext()} ? ${posts.nextUrl} : ''"
     >

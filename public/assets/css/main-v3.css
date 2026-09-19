@@ -18,10 +18,23 @@
   --lake-soft: #e5f1f4;
   --lake-text: #4e93a6;
 
+  /* 正文字族：拉丁字母与数字走 Segoe UI（macOS 上是系统字体），
+     中日韩字形落到后面的中文无衬线（Windows 微软雅黑 / macOS 苹方），
+     最后用 Noto Sans SC 兜底 —— 避免它没加载时浏览器把中文兜成宋体。
+     浏览器按字符逐个回退，所以这一条同时满足「英文数字 Segoe UI + 中文雅黑」 */
+  --font-sans:
+    "Segoe UI", -apple-system, "Helvetica Neue", "Microsoft YaHei", "微软雅黑",
+    "PingFang SC", "Hiragino Sans GB", "Noto Sans SC", sans-serif;
+
   /* 目录选中项：语雀青色（Ant Design 调色板 cyan-6） */
   --toc-active: #13c2c2;
 
   --max-w: 760px;
+
+  /* 文章详情页里，右侧目录额外右移的距离：正文位置不动，
+     外框向右多留出这段空间，目录被推到新的右边缘（窄屏目录是抽屉，不受影响）。
+     想让目录再往右一点，改这个数字即可 */
+  --toc-shift: 24px;
 
   /* 通用导航栏 / 页面外壳宽度：与详情页同为 980，独立于欢迎页的 1180 */
   --shell-w: 980px;
@@ -90,7 +103,9 @@ body {
   margin: 0;
   background: var(--bg);
   color: var(--ink);
-  font-family: "Noto Sans SC", sans-serif;
+  /* 全站正文字族：英文数字 Segoe UI，中文微软雅黑 / 苹方（见 :root 的 --font-sans），
+     其余元素不单独声明字体的都继承这里 */
+  font-family: var(--font-sans);
   font-weight: 300;
   line-height: 1.7;
   -webkit-font-smoothing: antialiased;
@@ -439,19 +454,59 @@ nav.desktop-nav a.active::after {
   color: var(--ink-soft);
 }
 
+/* 窄屏导航抽屉：从右侧滑出，最宽 176px，左侧尽量多露出页面内容，
+   并盖一层遮罩。收起时靠 translateX(100%) 移出屏幕，
+   配合 visibility 保证不会被键盘聚焦。 */
 .mobile-drawer {
-  display: none;
   position: fixed;
-  inset: 0;
-  background: var(--bg);
-  z-index: 50;
-  padding: 24px;
+  top: 0;
+  right: 0;
+  bottom: 0;
+  z-index: 61;
+  display: flex;
   flex-direction: column;
-  gap: 24px;
+  gap: 22px;
+  width: min(48vw, 176px);
+  padding: 22px 18px;
+  background: var(--bg-raised);
+  border-left: 1px solid var(--line);
+  box-shadow: -18px 0 40px -24px rgba(35, 35, 38, 0.4);
+  transform: translateX(100%);
+  visibility: hidden;
+  transition:
+    transform 0.3s ease,
+    visibility 0.3s;
 }
 
 .mobile-drawer.open {
-  display: flex;
+  transform: none;
+  visibility: visible;
+}
+
+html[data-theme="dark"] .mobile-drawer {
+  box-shadow: -18px 0 40px -22px rgba(0, 0, 0, 0.6);
+}
+
+/* 导航抽屉遮罩：颜色与目录抽屉保持一致 */
+.drawer-scrim {
+  position: fixed;
+  inset: 0;
+  z-index: 60;
+  background: rgba(35, 35, 38, 0.44);
+  opacity: 0;
+  visibility: hidden;
+  transition:
+    opacity 0.3s ease,
+    visibility 0.3s;
+}
+
+.drawer-scrim.open {
+  opacity: 1;
+  visibility: visible;
+}
+
+html[data-theme="dark"] .drawer-scrim {
+  background: rgba(0, 0, 0, 0.62);
 }
 
 .mobile-drawer .drawer-top {
@@ -463,8 +518,8 @@ nav.desktop-nav a.active::after {
 .mobile-drawer nav {
   display: flex;
   flex-direction: column;
-  gap: 20px;
-  font-size: 20px;
+  gap: 18px;
+  font-size: 18px;
   font-family: "Fraunces", "Noto Serif SC", serif;
 }
 
@@ -1032,14 +1087,25 @@ html[data-theme="dark"] .branch-corner {
 /* ── 文章详情 ─────────────────────────────── */
 
 .article-shell {
-  max-width: 1140px;
+  /* 外框向右加宽两倍 --toc-shift、左内边距只加一倍：
+     两者相抵，正文左边缘与列宽完全不动，只有内框右边缘右移 --toc-shift，
+     配合 .toc-sidebar 的 margin-left:auto 把目录推到新的右边缘。
+     窄屏（≤1219px，放不下 1140 + 偏移×4 时）由下面的媒体查询回落到常规。 */
+  max-width: calc(1140px + var(--toc-shift) * 2);
   margin: 0 auto;
-  padding: 56px 24px 80px;
+  padding: 56px 24px 80px calc(24px + var(--toc-shift));
   display: flex;
   /* 间距收窄一档，把省下的宽度让给右侧目录 */
   gap: 40px;
   align-items: flex-start;
   position: relative;
+}
+
+@media (max-width: 1219px) {
+  .article-shell {
+    max-width: 1140px;
+    padding-left: 24px;
+  }
 }
 
 .article-shell article {
@@ -1311,13 +1377,15 @@ html[data-theme="dark"] .toc-scrim {
   font-family: "JetBrains Mono", monospace;
 }
 
-.prose p code,
-.prose li code {
+/* 行内代码：段落 / 列表 / 引用 / 表格 / 标题里的 code（不含代码块里的 code）。
+   等宽字体的 x 高度比中文无衬线高，同字号下英文字母看着更大，
+   所以收到 0.74em，视觉上明显小于正文中文 */
+.prose :not(pre) > code {
   background: var(--lake-soft);
   color: var(--lake-text);
   padding: 2px 6px;
   border-radius: 4px;
-  font-size: 0.88em;
+  font-size: 0.74em;
 }
 
 /* highlight.js 插件输出的标准 class → 站点代码令牌 */
@@ -1430,6 +1498,8 @@ html[data-theme="dark"] .toc-scrim {
   position: sticky;
   /* 回退值；main-v3.js 会按视口高度把吸附位置改成垂直居中 */
   top: 88px;
+  /* 贴住 .article-shell 内框的右边缘，正文与它的间距随 --toc-shift 一起变化 */
+  margin-left: auto;
   /* 比正文一侧再宽一档，向左多占一点，标题少折行 */
   width: 280px;
   /* 左侧留白，与正文拉开呼吸感 */
@@ -2052,7 +2122,7 @@ hr.about-divider {
 }
 
 .copy-btn {
-  font-family: "Noto Sans SC", sans-serif;
+  font-family: var(--font-sans);
   font-size: 12px;
   color: var(--lake-text);
   background: var(--bg-raised);
@@ -2423,7 +2493,7 @@ footer a:hover {
   --halo-cw-avatar-rounded: 50%;
   --halo-cw-avatar-size: 48px;
   --halo-cw-base-font-size: 18px;
-  --halo-cw-base-font-family: "Noto Sans SC", sans-serif;
+  --halo-cw-base-font-family: var(--font-sans);
 }
 
 .comments {
@@ -2746,5 +2816,83 @@ hr.goods-divider {
   .goods-search-box {
     width: auto;
     flex: 1;
+  }
+}
+
+/* ── 文章系列（标签驱动：标签名以「系列·」开头） ── */
+
+/* 文章头部那枚胶囊：它本身就是指向系列页的链接。
+   负外边距抵消 .article-meta 的 40px 下边距，让它贴着头部信息行 */
+.series {
+  margin: -18px 0 40px;
+}
+
+.series-badge {
+  display: inline-flex;
+  align-items: center;
+  gap: 8px;
+  padding: 3px 14px;
+  border-radius: 999px;
+  background: var(--sakura-soft);
+  color: var(--sakura-text);
+  font-size: var(--fs-badge);
+  line-height: 1.8;
+  transition:
+    background 0.2s ease,
+    color 0.2s ease;
+}
+
+.series-badge:hover {
+  background: var(--sakura);
+  color: var(--bg-raised);
+}
+
+.series-mark {
+  font-size: 12.5px;
+  letter-spacing: 0.08em;
+  opacity: 0.85;
+}
+
+.series-name {
+  font-family: "Fraunces", "Noto Serif SC", serif;
+  font-weight: 500;
+}
+
+.series-pos {
+  font-style: italic;
+  font-variant-numeric: tabular-nums;
+  opacity: 0.85;
+}
+
+/* 胶囊右侧的小箭头：指向右，表示点进去还有一页 */
+.series-caret {
+  flex-shrink: 0;
+  width: 10px;
+  height: 10px;
+  background-color: currentColor;
+  -webkit-mask: url("data:image/svg+xml,%3Csvg xmlns='http://www.w3.org/2000/svg' viewBox='0 0 12 12'%3E%3Cpath d='M3 4.6h6L6 8.5z' fill='%23000' stroke='%23000' stroke-width='1.6' stroke-linejoin='round'/%3E%3C/svg%3E")
+    center / contain no-repeat;
+  mask: url("data:image/svg+xml,%3Csvg xmlns='http://www.w3.org/2000/svg' viewBox='0 0 12 12'%3E%3Cpath d='M3 4.6h6L6 8.5z' fill='%23000' stroke='%23000' stroke-width='1.6' stroke-linejoin='round'/%3E%3C/svg%3E")
+    center / contain no-repeat;
+  transform: rotate(-90deg);
+}
+
+/* 分类页里的系列卡：一张卡代表整个系列（标题是系列名，副行是篇数与最近更新），
+   和普通文章卡共用 .post-card 的排版，只把标题染成樱花粉以示区分 */
+.post-card--series .post-title {
+  color: var(--sakura-text);
+}
+
+.post-card--series:hover .post-title {
+  color: var(--sakura);
+}
+
+/* 系列页（标签归档页的系列形态）：文章按发布时间升序排列。
+   .series-feed 这个类保留着：main-v3.js 靠它识别系列页，并剥掉标题里的「第X篇：」前缀。 */
+
+@media (max-width: 640px) {
+  .series-badge {
+    gap: 6px;
+    padding: 3px 12px;
   }
 }

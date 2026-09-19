@@ -118,7 +118,15 @@ const { minimal = false, brandHref = "/" } = Astro.props;
             <circle cx="12" cy="7" r="4"></circle>
           </svg>
         </a>
-        <button class="icon-btn hamburger" id="hamburgerBtn" title="菜单" type="button">☰</button>
+        <button
+          class="icon-btn hamburger"
+          id="hamburgerBtn"
+          title="菜单"
+          type="button"
+          aria-label="打开导航菜单"
+          aria-controls="mobileDrawer"
+          aria-expanded="false"
+        >☰</button>
       </div>
     )
   }

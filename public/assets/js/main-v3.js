@@ -89,19 +89,47 @@
     });
   })();
 
-  /* ── 移动端抽屉 ─────────────────────────── */
-  var hamburger = document.getElementById("hamburgerBtn");
-  var drawer = document.getElementById("mobileDrawer");
-  var drawerClose = document.getElementById("drawerClose");
+  /* ── 移动端导航抽屉（右侧滑出 + 遮罩） ──────
+     与文章页目录抽屉同一套交互：点遮罩 / 点 ✕ / 按 Esc / 点菜单项都会关闭，
+     展开时锁住背景滚动，拉宽回桌面时自动收起（否则会残留 overflow: hidden）。 */
+  (function () {
+    var hamburger = document.getElementById("hamburgerBtn");
+    var drawer = document.getElementById("mobileDrawer");
+    if (!hamburger || !drawer) return;
 
-  if (hamburger && drawer) {
-    hamburger.addEventListener("click", function () {
+    var drawerClose = document.getElementById("drawerClose");
+    var scrim = document.createElement("div");
+    scrim.className = "drawer-scrim";
+    document.body.appendChild(scrim);
+
+    function openDrawer() {
       drawer.classList.add("open");
-    });
-    drawerClose.addEventListener("click", function () {
+      scrim.classList.add("open");
+      document.body.style.overflow = "hidden";
+      hamburger.setAttribute("aria-expanded", "true");
+    }
+
+    function closeDrawer() {
+      if (!drawer.classList.contains("open")) return;
       drawer.classList.remove("open");
+      scrim.classList.remove("open");
+      document.body.style.overflow = "";
+      hamburger.setAttribute("aria-expanded", "false");
+    }
+
+    hamburger.addEventListener("click", openDrawer);
+    if (drawerClose) drawerClose.addEventListener("click", closeDrawer);
+    scrim.addEventListener("click", closeDrawer);
+    drawer.addEventListener("click", function (e) {
+      if (e.target.closest && e.target.closest("nav a")) closeDrawer();
     });
-  }
+    window.addEventListener("keydown", function (e) {
+      if (e.key === "Escape") closeDrawer();
+    });
+    window.addEventListener("resize", function () {
+      if (window.innerWidth > 760) closeDrawer();
+    });
+  })();
 
   /* ── 搜索框展开 ─────────────────────────── */
   var searchToggle = document.getElementById("searchToggle");
@@ -1273,4 +1301,96 @@
 
     if (keyword) search(keyword);
   })();
+})();
+
+/* ── 文章系列 ───────────────────────────────────────
+   1. 分类页（.post-list--collapse-series）：同系列文章收成一张系列卡，
+      卡片本身由模板渲染在隐藏的 <template class="series-hint"> 里，
+      这里只负责「取第一张、其余收掉」；
+   2. 系列页（.series-feed）：剥掉卡片标题里自带的「第X篇：」前缀。
+   两件事都放在前端，模板只输出数据，避免 Thymeleaf 表达式差异把整页打成 500。 */
+(function () {
+  var TITLE_PREFIX = /^第[一二三四五六七八九十0-9]+篇：/;
+  var seenSeries = {};
+
+  function stripTitlePrefix() {
+    document.querySelectorAll(".series-feed .post-title").forEach(function (el) {
+      var text = el.textContent.trim();
+      if (TITLE_PREFIX.test(text)) el.textContent = text.replace(TITLE_PREFIX, "");
+    });
+  }
+
+  /* 系列卡：由模板输出的数据属性现场拼出来。
+     卡片本身不写进模板，避免在文章卡内部嵌套 <a>（HTML 不允许，浏览器会拆掉外层链接）。 */
+  function buildSeriesCard(hint) {
+    var name = hint.getAttribute("data-name");
+    var link = document.createElement("a");
+    link.className = "post-card post-card--series";
+    link.href = hint.getAttribute("data-url") || "#";
+
+    var main = document.createElement("div");
+    main.className = "post-main";
+
+    var title = document.createElement("p");
+    title.className = "post-title serif";
+    title.textContent = name;
+
+    var sub = document.createElement("div");
+    sub.className = "post-sub";
+
+    var chips = document.createElement("div");
+    chips.className = "post-tags";
+    var chip = document.createElement("span");
+    chip.className = "tag-pill tag-pill--pink";
+    chip.textContent = "系列";
+    chips.appendChild(chip);
+
+    var date = document.createElement("span");
+    date.className = "post-date";
+    date.textContent = "共 " + hint.getAttribute("data-count") + " 篇 · " + hint.getAttribute("data-latest");
+
+    sub.appendChild(chips);
+    sub.appendChild(date);
+    main.appendChild(title);
+    main.appendChild(sub);
+    link.appendChild(main);
+    return link;
+  }
+
+  function collapseSeries(root) {
+    root.querySelectorAll(".series-hint").forEach(function (hint) {
+      var name = hint.getAttribute("data-name");
+      // 提示就在它所属的那张文章卡内部（片段把两者输出在同一张卡里）
+      var card = hint.closest(".post-card");
+      hint.remove();
+
+      if (!name || !card) return;
+      // 已经被替换成系列卡的，不再处理（防御：重复执行时不要误删）
+      if (card.classList.contains("post-card--series")) return;
+
+      // 同一个系列只保留列表里最先出现的那张，其余文章卡整张收掉
+      if (seenSeries[name]) {
+        card.remove();
+        return;
+      }
+      seenSeries[name] = true;
+      card.replaceWith(buildSeriesCard(hint));
+    });
+  }
+
+  var collapseRoot = document.querySelector(".post-list--collapse-series");
+  var seriesFeed = document.querySelector(".series-feed");
+  if (!collapseRoot && !seriesFeed) return;
+
+  if (collapseRoot) collapseSeries(collapseRoot);
+  if (seriesFeed) stripTitlePrefix();
+
+  // 无限滚动追加的节点同样要过一遍（去掉同系列的重复卡、剥掉标题前缀）
+  var list = collapseRoot || seriesFeed;
+  if (list) {
+    new MutationObserver(function () {
+      collapseSeries(list);
+      stripTitlePrefix();
+    }).observe(list, { childList: true });
+  }
 })();

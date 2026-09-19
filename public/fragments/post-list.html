@@ -1,6 +1,10 @@
 <!-- 文章卡片列表片段：博客列表页 / 分类页 / 标签页共用
      offset 表示跳过前面几篇（落地页首篇已作为精选展示）
-     无封面图时不输出图片区域，卡片退化为纯文字单栏 -->
+     无封面图时不输出图片区域，卡片退化为纯文字单栏。
+
+     卡片所属文章若带「系列·XXX」标签，卡片内部会多一份隐藏的系列卡模板
+     （<template class="series-hint">，内容不会渲染），由 main-v3.js 在分类页
+     把同系列文章收成一张系列卡；其它页面不折叠，没有 JS 时列表保持原样。 -->
 <th:block th:fragment="list (posts, offset)">
   <a
     class="post-card"
@@ -26,10 +30,14 @@
       ></p>
       <div class="post-sub">
         <div class="post-tags">
+          <!-- 系列标签在卡片上剥掉「系列·」前缀，保留线索但不重复冗余前缀 -->
           <span
             th:each="tag, t : ${post.tags}"
+            th:with="raw=${tag.spec.displayName},
+                     series=${#strings.startsWith(raw, '系列·') or #strings.startsWith(raw, '系列:') or #strings.startsWith(raw, '系列-')},
+                     shown=${series ? #strings.substring(raw, 3) : raw}"
             th:class="${t.index % 2 == 0 ? 'tag-pill tag-pill--pink' : 'tag-pill tag-pill--blue'}"
-            th:text="${tag.spec.displayName}"
+            th:text="${shown}"
           ></span>
         </div>
         <span
@@ -38,5 +46,27 @@
         ></span>
       </div>
     </div>
+
+    <th:block th:each="tag : ${post.tags}">
+      <th:block
+        th:with="raw=${tag.spec.displayName},
+                 isSeries=${#strings.startsWith(raw, '系列·') or #strings.startsWith(raw, '系列:') or #strings.startsWith(raw, '系列-')}"
+      >
+        <th:block
+          th:if="${isSeries}"
+          th:with="seriesName=${#strings.substring(raw, 3)},
+                   latest=${postFinder.list({page: 1, size: 1, tagName: tag.metadata.name}).items[0]}"
+        >
+          <span
+            class="series-hint"
+            hidden
+            th:attr="data-name=${seriesName},
+                     data-url=${tag.status.permalink},
+                     data-count=${tag.postCount},
+                     data-latest=${#temporals.format(latest.spec.publishTime, 'MM.dd')}"
+          ></span>
+        </th:block>
+      </th:block>
+    </th:block>
   </a>
 </th:block>

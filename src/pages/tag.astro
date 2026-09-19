@@ -7,26 +7,70 @@ import Layout from "../layouts/Layout.astro";
     <title th:text="|${tag.spec.displayName} - ${site.title}|"></title>
   </Fragment>
 
-  <div class="page-shell">
-    <div class="page-heading">
-      <h1 th:text="${tag.spec.displayName}"></h1>
-      <p class="page-meta" th:text="|${posts.total} 篇文章|"></p>
-    </div>
-
-    <div
-      class="post-list"
-      data-infinite
-      th:attr="data-next-url=${posts.hasNext()} ? ${posts.nextUrl} : ''"
+  <!-- 系列标签（名字以「系列·」开头）：这个标签的归档页就是该系列的「系列页」——
+       页头换成系列样式，列表按发布时间升序（系列正文顺序），卡片由 CSS 计数器编号，
+       标题里自带的「第X篇：」前缀由 main-v3.js 剥掉。
+       普通标签仍然走下面的常规标签归档。 -->
+  <th:block
+    th:with="raw=${tag.spec.displayName},
+             isSeries=${#strings.startsWith(raw, '系列·') or #strings.startsWith(raw, '系列:') or #strings.startsWith(raw, '系列-')}"
+  >
+    <th:block
+      th:if="${isSeries}"
+      th:with="seriesName=${#strings.substring(raw, 3)},
+               seriesPosts=${postFinder.list({page: 1, size: 10, tagName: tag.metadata.name, sort: {'spec.publishTime,asc'}})}"
     >
-      <th:block th:replace="~{fragments/post-list :: list (posts=${posts}, offset=0)}"></th:block>
-    </div>
+      <div class="page-shell">
+        <div class="page-heading">
+          <h1 th:text="${seriesName}"></h1>
+          <p class="page-meta" th:text="|系列 · 共 ${seriesPosts.total} 篇|"></p>
+        </div>
 
-    <div class="empty-state" th:if="${posts.total == 0}">
-      <span class="empty-mark">✿</span>
-      这个标签下还没有文章
-    </div>
-  </div>
+        <div
+          class="post-list series-feed"
+          data-infinite
+          th:attr="data-next-url=${seriesPosts.hasNext()} ? ${seriesPosts.nextUrl} : ''"
+        >
+          <th:block
+            th:replace="~{fragments/post-list :: list (posts=${seriesPosts}, offset=0)}"
+          ></th:block>
+        </div>
 
-  <div class="infinite-status" id="infiniteStatus"></div>
-  <div id="infiniteSentinel"></div>
+        <div class="empty-state" th:if="${seriesPosts.total == 0}">
+          <span class="empty-mark">✿</span>
+          这个系列还没有文章
+        </div>
+      </div>
+
+      <div class="infinite-status" id="infiniteStatus"></div>
+      <div id="infiniteSentinel"></div>
+    </th:block>
+
+    <th:block th:unless="${isSeries}">
+      <div class="page-shell">
+        <div class="page-heading">
+          <h1 th:text="${tag.spec.displayName}"></h1>
+          <p class="page-meta" th:text="|${posts.total} 篇文章|"></p>
+        </div>
+
+        <div
+          class="post-list"
+          data-infinite
+          th:attr="data-next-url=${posts.hasNext()} ? ${posts.nextUrl} : ''"
+        >
+          <th:block
+            th:replace="~{fragments/post-list :: list (posts=${posts}, offset=0)}"
+          ></th:block>
+        </div>
+
+        <div class="empty-state" th:if="${posts.total == 0}">
+          <span class="empty-mark">✿</span>
+          这个标签下还没有文章
+        </div>
+      </div>
+
+      <div class="infinite-status" id="infiniteStatus"></div>
+      <div id="infiniteSentinel"></div>
+    </th:block>
+  </th:block>
 </Layout>
