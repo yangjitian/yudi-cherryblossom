@@ -1,6 +1,0 @@
-{
-  "emmet.includeLanguages": {
-    "astro": "html"
-  },
-  "editor.defaultFormatter": "esbenp.prettier-vscode"
-}

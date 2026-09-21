@@ -23,6 +23,9 @@ pnpm-debug.log*
 # jetbrains setting folder
 .idea/
 
+# vscode 编辑器配置（本地保留，不进版本库）
+.vscode/
+
 templates/
 
 # 打包产物
