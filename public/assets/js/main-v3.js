@@ -6,6 +6,12 @@
     "(prefers-reduced-motion: reduce)",
   ).matches;
 
+  /* 首页动效开关（主题设置 → 首页动效）：只有首页的 body 带这个属性，
+     其他页面取到 null，两个特效都照常运行 */
+  var homeEffects = document.body.getAttribute("data-home-effects");
+  var petalsOn = homeEffects !== "rain" && homeEffects !== "none";
+  var rainOn = homeEffects !== "osmanthus" && homeEffects !== "none";
+
   /* ── 主题切换 ───────────────────────────── */
   var STORE_KEY = "yudi-theme";
   var root = document.documentElement;
@@ -212,21 +218,54 @@
     tick();
   })();
 
-  /* ── 飘落花瓣 ───────────────────────────── */
+  /* ── 飘落花瓣（樱花 / 桂花共用同一套飘落逻辑，只换花型与形态参数） ── */
   (function () {
     var field = document.getElementById("petalField");
-    if (!field || reduceMotion) return;
+    if (!field || reduceMotion || !petalsOn) return;
 
     var NS = "http://www.w3.org/2000/svg";
-    // 樱花花瓣轮廓：圆底、尖端带 V 形凹口
-    var PETAL_PATH =
-      "M5.2 14 C5.2 9.2 9 4.9 14.6 4.1 L16 6.4 L17.4 4.1 C23 4.9 26.8 9.2 26.8 14 C26.8 19 24.5 23.5 21 26.5 C19.4 27.8 17.8 28.9 16 29.8 C14.2 28.9 12.6 27.8 11 26.5 C7.5 23.5 5.2 19 5.2 14 Z";
+
+    // 花型配置：花瓣轮廓、配色（配色在 CSS 里按 data-petal-flower 分流）、
+    // 尺寸 / 远近层次 / 速度 / 密度 / 频率都收在这里，飘落逻辑本身不含任何花型专属数值
+    var FLOWERS = {
+      // 樱花：全站默认花型，圆底、尖端带 V 形凹口
+      sakura: {
+        path: "M5.2 14 C5.2 9.2 9 4.9 14.6 4.1 L16 6.4 L17.4 4.1 C23 4.9 26.8 9.2 26.8 14 C26.8 19 24.5 23.5 21 26.5 C19.4 27.8 17.8 28.9 16 29.8 C14.2 28.9 12.6 27.8 11 26.5 C7.5 23.5 5.2 19 5.2 14 Z",
+        size: [10, 20], // 花瓣基准尺寸 px 区间
+        depth: [0.4, 1], // 远近层次：与基准尺寸相乘得到实际大小，低于 0.6 的额外加虚化
+        fall: [8, 15], // 单颗下落时长 s 区间
+        sway: [3, 5], // 横向摆动周期 s 区间
+        blur: "0.6px", // 虚化量
+        limits: { full: 14, header: 8 }, // 同屏数量上限
+        interval: 1700, // 生成间隔 ms
+        warmup: [5, 900], // 首屏预热：颗数 / 相邻间隔 ms
+      },
+      // 桂花：四瓣金黄小花（四片圆头花瓣呈十字排布），比樱花更密、更碎，整体尺寸与樱花接近
+      osmanthus: {
+        path: "M16 16 C12.9 12.5 11.9 7.8 13.4 5.2 C14.6 3.1 17.4 3.1 18.6 5.2 C20.1 7.8 19.1 12.5 16 16 Z M16 16 C19.5 12.9 24.2 11.9 26.8 13.4 C28.9 14.6 28.9 17.4 26.8 18.6 C24.2 20.1 19.5 19.1 16 16 Z M16 16 C19.1 19.5 20.1 24.2 18.6 26.8 C17.4 28.9 14.6 28.9 13.4 26.8 C11.9 24.2 12.9 19.5 16 16 Z M16 16 C12.5 19.1 7.8 20.1 5.2 18.6 C3.1 17.4 3.1 14.6 5.2 13.4 C7.8 11.9 12.5 12.9 16 16 Z",
+        size: [15, 24],
+        depth: [0.62, 1], // 最小的一档也保持在 0.6 以上，不会出现看不清的极小花瓣，也因此不再虚化
+        fall: [6.5, 11],
+        sway: [2.2, 3.6],
+        blur: "0.3px",
+        limits: { full: 20, header: 12 },
+        interval: 800,
+        warmup: [8, 500],
+      },
+    };
 
     var mode = document.body.getAttribute("data-petals");
+    var flower =
+      FLOWERS[document.body.getAttribute("data-petal-flower")] || FLOWERS.sakura;
+    var maxPetals = mode === "full" ? flower.limits.full : flower.limits.header;
     var scope = document.getElementById("petalScope");
-    var maxPetals = mode === "full" ? 14 : 8;
     var active = 0;
     var allowed = true;
+
+    // 在 [min, max] 区间内取随机值
+    function between(range) {
+      return range[0] + Math.random() * (range[1] - range[0]);
+    }
 
     function spawn() {
       if (!allowed || active >= maxPetals) return;
@@ -235,16 +274,16 @@
       var el = document.createElement("div");
       el.className = "petal";
 
-      var size = 10 + Math.random() * 10;
-      var fallDuration = 8 + Math.random() * 7;
-      var swayDuration = 3 + Math.random() * 2;
-      var depth = 0.4 + Math.random() * 0.6;
+      var size = between(flower.size);
+      var fallDuration = between(flower.fall);
+      var swayDuration = between(flower.sway);
+      var depth = between(flower.depth);
 
       el.style.left = Math.random() * 100 + "vw";
       el.style.width = size * depth + "px";
       el.style.height = size * depth + "px";
       el.style.animationDuration = fallDuration + "s, " + swayDuration + "s";
-      el.style.filter = depth < 0.6 ? "blur(0.6px)" : "none";
+      el.style.filter = depth < 0.6 ? "blur(" + flower.blur + ")" : "none";
       if (mode !== "full") {
         el.style.animationName = "petal-fall, petal-sway";
         el.style.animationIterationCount = "1, infinite";
@@ -253,7 +292,7 @@
       var svg = document.createElementNS(NS, "svg");
       svg.setAttribute("viewBox", "0 0 32 32");
       var path = document.createElementNS(NS, "path");
-      path.setAttribute("d", PETAL_PATH);
+      path.setAttribute("d", flower.path);
       svg.appendChild(path);
       el.appendChild(svg);
 
@@ -275,15 +314,17 @@
       ).observe(scope);
     }
 
-    for (var i = 0; i < 5; i++) setTimeout(spawn, i * 900);
-    setInterval(spawn, 1700);
+    for (var i = 0; i < flower.warmup[0]; i++) {
+      setTimeout(spawn, i * flower.warmup[1]);
+    }
+    setInterval(spawn, flower.interval);
   })();
 
   /* ── 欢迎页：雨滴落海（写实版水花） ─────── */
   (function () {
     var sea = document.querySelector(".sea");
     var field = document.querySelector(".rain-field");
-    if (!sea || !field || reduceMotion) return;
+    if (!sea || !field || reduceMotion || !rainOn) return;
 
     // 落点深度按 .sea 实际高度的百分比计算，避免固定像素偏移让雨滴悬在浪尖上方
     var LANDING_RATIO = 0.48;

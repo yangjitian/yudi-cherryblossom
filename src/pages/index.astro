@@ -2,7 +2,14 @@
 import Layout from "../layouts/Layout.astro";
 ---
 
-<Layout minimal petals="none" brandHref="/" bodyClass="welcome-page">
+<Layout
+  minimal
+  petals="full"
+  petalFlower="osmanthus"
+  effectsSwitch
+  brandHref="/"
+  bodyClass="welcome-page"
+>
   <Fragment slot="head">
     <title th:text="${site.title}"></title>
   </Fragment>

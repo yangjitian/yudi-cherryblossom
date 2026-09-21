@@ -71,3 +71,20 @@ spec:
               description: 好物的原地址；卡片上的来源域名与图标由它推导，点卡片上半区跳这里（新标签页打开）
               validation: "required"
               value: ""
+    - group: effects
+      label: 首页动效
+      formSchema:
+        - $formkit: radio
+          name: homeEffects
+          label: 首页欢迎页特效
+          description: 只作用于首页欢迎页；功能页的樱花飘落不受影响
+          value: both
+          options:
+            - label: 桂花飘落 + 雨滴落海
+              value: both
+            - label: 只飘桂花
+              value: osmanthus
+            - label: 只落雨滴
+              value: rain
+            - label: 都不显示
+              value: none

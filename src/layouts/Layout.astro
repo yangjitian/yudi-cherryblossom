@@ -5,6 +5,10 @@ import Footer from "../components/Footer.astro";
 interface Props {
   wide?: boolean;
   petals?: "full" | "header" | "none";
+  petalFlower?: "sakura" | "osmanthus";
+  // 首页专用：花瓣 / 雨滴是否生效改由主题设置「首页动效」在运行时决定，
+  // 其他页面不出这个属性，保持构建期定死的行为
+  effectsSwitch?: boolean;
   minimal?: boolean;
   brandHref?: string;
   bodyClass?: string;
@@ -13,6 +17,8 @@ interface Props {
 const {
   wide = false,
   petals = "none",
+  petalFlower = "sakura",
+  effectsSwitch = false,
   minimal = false,
   brandHref = "/",
   bodyClass = "",
@@ -54,7 +60,14 @@ const ASSET_VER = String(Date.now());
     </script>
     <slot name="head" />
   </head>
-  <body class:list={[{ wide }, bodyClass]} data-petals={petals === "none" ? undefined : petals}>
+  <body
+    class:list={[{ wide }, bodyClass]}
+    data-petals={petals === "none" ? undefined : petals}
+    data-petal-flower={petals === "none" ? undefined : petalFlower}
+    th:attr={effectsSwitch
+      ? "data-home-effects=${theme.config?.effects?.homeEffects}"
+      : undefined}
+  >
     {
       petals !== "none" && (
         <div
