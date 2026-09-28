@@ -88,3 +88,35 @@ spec:
               value: rain
             - label: 都不显示
               value: none
+    - group: series
+      label: 系列页
+      formSchema:
+        - $formkit: array
+          name: notes
+          label: 系列页说明
+          description: 一行一个系列。系列名从下拉里选（系列标签都以「系列·」开头），说明会显示在该系列页标题下方，可多行；没配到的系列不显示
+          value: []
+          addLabel: 添加系列说明
+          itemLabels:
+            - type: text
+              label: $value.name
+          children:
+            - $formkit: select
+              name: name
+              label: 系列名
+              description: 从已有标签里选，系列标签都以「系列·」开头
+              action: /apis/api.content.halo.run/v1alpha1/tags
+              requestOption:
+                method: GET
+                pageField: page
+                sizeField: size
+                totalField: total
+                itemsField: items
+                labelField: spec.displayName
+                valueField: spec.displayName
+                fieldSelectorKey: spec.displayName
+              value: ""
+            - $formkit: textarea
+              name: note
+              label: 说明
+              value: ""

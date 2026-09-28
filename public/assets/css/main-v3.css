@@ -591,6 +591,18 @@ html[data-theme="dark"] .drawer-scrim {
   margin: 0;
 }
 
+/* 系列页说明（主题设置 → 系列页）：与文章页的引用块同一套视觉，粉色竖线 + 次级文字色 */
+.page-note {
+  margin: 20px 0 0;
+  padding-left: 14px;
+  border-left: 2.5px solid var(--sakura);
+  font-size: 14.5px;
+  line-height: 1.75;
+  color: var(--ink-soft);
+  max-width: 62ch;
+  white-space: pre-line;
+}
+
 .section-label {
   max-width: var(--list-w);
   margin: 52px auto 24px;

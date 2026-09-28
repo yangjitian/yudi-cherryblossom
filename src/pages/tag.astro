@@ -24,6 +24,17 @@ import Layout from "../layouts/Layout.astro";
         <div class="page-heading">
           <h1 th:text="${seriesName}"></h1>
           <p class="page-meta" th:text="|系列 · 共 ${seriesPosts.total} 篇|"></p>
+          <!-- 系列页说明（主题设置 → 系列页）：按系列名匹配对应的一条，配了才显示。
+               设置项里的名字是下拉选出来的标签全名（raw，含「系列·」前缀），
+               这里同时兼容手写去前缀的写法。文案全部来自设置项，模板里不放站点内容 -->
+          <th:block th:if="${theme.config?.series?.notes != null}">
+            <p
+              class="page-note"
+              th:each="item : ${theme.config?.series?.notes}"
+              th:if="${(item.name == raw or item.name == seriesName) and not #strings.isEmpty(item.note)}"
+              th:text="${item.note}"
+            ></p>
+          </th:block>
         </div>
 
         <div
